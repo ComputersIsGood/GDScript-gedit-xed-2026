@@ -1,4 +1,4 @@
-Updated GDScript Language for GTKSourceViewer-Based Text Editors (xed, gedit)
+GDScript 4.5.1 Language for GTKSourceViewer-Based Text Editors (xed, gedit)
 ==============
 I use this file in the Xed text editor (default text editor for Linux Mint), which uses GTKSourceViewer for styles.  
 I don't know if it will work in other editors, but I believe it should work on any editor which uses GTKSourceViewer (gedit apparently).  
