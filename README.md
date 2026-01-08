@@ -26,8 +26,8 @@ Be careful when Editing the id in \<language\>. If you change the id at the top 
 
 Disclaimers / Notes
 ------------
-I am a noob at Github, GDScript, and formatting xml files;
-I couldn't find any more recent .lang file for GDScript in GTKSourceViewer, so I took a shot at making my own update;
+I am a noob at Github, GDScript, and formatting xml files.
+I couldn't find any more recent .lang file for GDScript in GTKSourceViewer, so I took a shot at making my own update.
 I simply wanted more GDScript keywords and expressions to light up nicely in the text editor that came with my linux distro, which it now seems to do correctly, but I cannot guarantee anything past that :)
 
 Additions to haimat's Version
