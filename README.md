@@ -18,11 +18,11 @@ Modification
 It is surprisingly simple to modify the file yourself, take a shot at changing styles or adding expressions if you want to tweak anything!
 
 My understanding is: 
-- The text editor's style file (/usr/share/gtksourceview-4/styles) defines styles for certain <style-ref> in this .lang file
+- The text editor's style file (/usr/share/gtksourceview-4/styles) defines styles for certain \<style-ref\> in this .lang file
 - GTKSourceViewer defines "fallback" styles for some types, which is why they are colored even if the stlye file does not mention them
-    - I couldn't find a full list, but quite a few were already added in the <styles> section (line 30)
+    - I couldn't find a full list, but quite a few were already added in the \<styles\> section (line 30)
 
-Be careful when Editing the id in <language>. If you change the id at the top of the file (gdscript451), the whole file will break unless you change every other instance of gdscript451 to the same thing.
+Be careful when Editing the id in \<language\>. If you change the id at the top of the file (gdscript451), the whole file will break unless you change every other instance of gdscript451 to the same thing.
 
 Disclaimers / Notes
 ------------
