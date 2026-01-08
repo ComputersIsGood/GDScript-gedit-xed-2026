@@ -1,0 +1,1356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright (C) 2018 Jack R Linhart <iatenine@gmail.com>
+ Copyright (C) 2014 Matthias F. Brandstetter <pub@mabra.me>
+ Updated 2026 by ComputersIsGood
+
+ This library is free software; you can redistribute it and/or
+ modify it under the terms of the GNU Library General Public
+ License as published by the Free Software Foundation; either
+ version 2 of the License, or (at your option) any later version.
+
+ This library is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ Library General Public License for more details.
+
+ You should have received a copy of the GNU Library General Public
+ License along with this library; if not, write to the
+ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ Boston, MA 02111-1307, USA.
+-->
+
+<language id="gdscript451" name="GDScript 4.5.1" version="2.0" _section="Script">
+  <metadata>
+    <property name="mimetypes">text/x-gdscript451</property>
+    <property name="globs">*.gd</property>
+    <property name="line-comment-start">#</property>
+  </metadata>
+
+  <styles>
+    <style id="annotation"    	  name="Annotation"        	   map-to="def:preprocessor"/>
+    <style id="keyword"           name="Keyword"               map-to="def:keyword"/>
+    <style id="multiline-string"  name="Multiline string"      map-to="def:string"/>
+    <style id="string"            name="String"                map-to="def:string"/>
+    <style id="escaped-char"      name="Escaped Character"     map-to="def:special-char"/>
+    <style id="format"            name="Format"                map-to="def:character"/>
+    <style id="string-conversion" name="string-conversion"/>
+    <style id="special-variable"  name="Special Variable"      map-to="def:identifier"/>
+    <style id="boolean"           name="Boolean"               map-to="def:boolean"/>
+    <style id="floating-point"    name="Floating point number" map-to="def:floating-point"/>
+    <style id="decimal"           name="Decimal number"        map-to="def:decimal"/>
+    <style id="base-n-integer"    name="Base-N number"         map-to="def:base-n-integer"/>
+    <style id="complex"           name="Complex number"        map-to="def:complex"/>
+    <style id="builtin-constant"  name="Builtin Constant"      map-to="def:special-constant"/>
+    <style id="builtin-class"     name="Builtin Class"         map-to="def:struct"/>    
+    <style id="builtin-object"    name="Builtin Object"        map-to="def:type"/>
+    <style id="builtin-function"  name="Builtin Function"      map-to="def:builtin"/>
+  </styles>
+
+  <definitions>
+    <define-regex id="identifier">[_a-zA-Z][_a-zA-Z0-9]*</define-regex>
+    <define-regex id="number">[1-9][0-9]*</define-regex>
+
+    <context id="format" style-ref="format" extend-parent="false">
+      <match extended="true">
+        %                       # leading % sign
+        \(\%{identifier}\)?     # mapping key
+        [#0\-\ \+]*             # conversion flags
+        (\-?\%{number}|\*)?     # minimum field width
+        (\.(\-?\%{number}|\*))? # precision
+        (hlL)?                  # lentgh modifier
+        [diouxXeEfFgGcrs%]      # conversion type
+      </match>
+    </context>
+
+    <!-- http://docs.python.org/ref/strings.html -->
+    <context id="escaped-char" style-ref="escaped-char" extend-parent="true">
+      <match extended="true">
+        \\(                   # leading backslash
+        [\\\"\'nrbtfav\?] |   # escaped character
+        [0-7]{1,3} |          # one, two, or three octal digits
+        x[0-9A-Fa-f]+         # 'x' followed by hex digits
+        )
+      </match>
+    </context>
+
+    <context id="gdscript451" class="no-spell-check">
+      <include>
+        <context ref="def:shebang"/>
+        <context id="gdscript451-comment" style-ref="def:comment" end-at-line-end="true">
+		  <start>#</start>
+		  <include>
+			<context ref="comment-critical"/>
+			<context ref="comment-warning"/>
+			<context ref="comment-notice"/>
+		  </include>
+		</context>
+        
+        <context ref="double-quoted-string"/>
+        <context ref="single-quoted-string"/>
+
+        <context id="boolean" style-ref="boolean">
+          <prefix>(?&lt;![\w\.])</prefix>
+          <keyword>false</keyword>
+          <keyword>true</keyword>
+        </context>
+
+		<context id="comment-critical" style-ref="def:error">
+		  <match extended="true">
+			(?i)\b(ALERT|ATTENTION|CAUTION|CRITICAL|DANGER|SECURITY)\b
+		  </match>
+		</context>
+
+		<context id="comment-warning" style-ref="def:warning">
+		  <match extended="true">
+			(?i)\b(BUG|DEPRECATED|FIXME|HACK|TASK|TBD|TODO|WARNING)\b
+		  </match>
+		</context>
+
+		<context id="comment-notice" style-ref="def:note">
+		  <match extended="true">
+			(?i)\b(INFO|NOTE|NOTICE|TEST|TESTING)\b
+		  </match>
+		</context>
+
+        <define-regex id="float" extended="true">
+          ( (\d+)?\.\d+ | \d+\. ) |
+          ( (\d+|(\d+)?\.\d+|\d+\.)[eE][+-]?\d+ )
+        </define-regex>
+
+        <context id="complex" style-ref="complex">
+          <match>(?&lt;![\w\.])(\%{float}|\d+)[jJ]\b</match>
+        </context>
+
+        <context id="float" style-ref="floating-point">
+          <match>(?&lt;![\w\.])\%{float}(?![\w\.])</match>
+        </context>
+
+        <context id="decimal" style-ref="decimal">
+          <match>(?&lt;![\w\.])([1-9][0-9]*|0)[lL]?(?![\w\.])</match>
+        </context>
+
+        <context id="octal" style-ref="base-n-integer">
+          <match>(?&lt;![\w\.])0[0-7]+[lL]?(?![\w\.])</match>
+        </context>
+
+        <context id="hex" style-ref="base-n-integer">
+          <match>(?&lt;![\w\.])0[xX][0-9A-Fa-f]+[lL]?(?![\w\.])</match>
+        </context>
+
+        <context id="annotation" style-ref="annotation">
+          <match>(?&lt;![\w\.])@[A-Za-z_][A-Za-z0-9_]*</match>
+        </context>
+        
+        <context id="stringname" style-ref="special-variable">
+		  <match>&amp;"([^"\\]|\\.)*"</match>
+        </context>
+        
+        <context id="get-node-path" style-ref="special-variable">
+		  <match>\$(?:[A-Za-z_][A-Za-z0-9_]*|"([^"\\]|\\.)*")</match>
+        </context>
+        
+        <context id="node-path" style-ref="special-variable">
+		  <match>\^"([^"\\]|\\.)*"</match>
+        </context>
+        
+        <context id="unique-node" style-ref="special-variable">
+		  <match>%(?:[A-Za-z_][A-Za-z0-9_]*|"([^"\\]|\\.)*")</match>
+        </context>
+
+        <context id="builtin-constant" style-ref="builtin-constant">
+          <match>(?&lt;![\w\.])[A-Z][A-Z0-9_]+[A-Z0-9]\b</match>
+        </context>
+
+        <!-- This is also a built-in function from my understanding -->
+        <context id="underscore-function" style-ref="builtin-function">
+		  <match>(?&lt;![\w\.])_[A-Za-z0-9_]*\s*(?=\()</match>
+        </context>
+
+        <context id="keyword" style-ref="keyword">
+          <keyword>if</keyword>
+          <keyword>elif</keyword>
+          <keyword>else</keyword>
+          <keyword>match</keyword>
+          <keyword>when</keyword>
+          <keyword>in</keyword>
+          <keyword>for</keyword>
+          <keyword>while</keyword>
+          <keyword>break</keyword>
+          <keyword>continue</keyword>
+          <keyword>pass</keyword>
+          <keyword>return</keyword>
+          <keyword>as</keyword>
+          <keyword>is</keyword>
+          <keyword>class</keyword>
+          <keyword>class_name</keyword>
+          <keyword>signal</keyword>
+          <keyword>func</keyword>
+          <keyword>static</keyword>
+          <keyword>const</keyword>
+          <keyword>enum</keyword>
+          <keyword>var</keyword>
+          <keyword>not</keyword>
+          <keyword>and</keyword>
+          <keyword>or</keyword>
+        </context>
+
+		<!-- https://docs.godotengine.org/en/stable/classes/index.html -->
+        <context id="class" style-ref="builtin-object">
+          <prefix>(?&lt;![\w\.])</prefix>
+          <keyword>Node</keyword>
+          <keyword>AcceptDialog</keyword>
+          <keyword>AimModifier3D</keyword>
+          <keyword>AnimatableBody2D</keyword>
+          <keyword>AnimatableBody3D</keyword>
+          <keyword>AnimatedSprite2D</keyword>
+          <keyword>AnimatedSprite3D</keyword>
+          <keyword>AnimationMixer</keyword>
+          <keyword>AnimationPlayer</keyword>
+          <keyword>AnimationTree</keyword>
+          <keyword>Area2D</keyword>
+          <keyword>Area3D</keyword>
+          <keyword>AspectRatioContainer</keyword>
+          <keyword>AudioListener2D</keyword>
+          <keyword>AudioListener3D</keyword>
+          <keyword>AudioStreamPlayer</keyword>
+          <keyword>AudioStreamPlayer2D</keyword>
+          <keyword>AudioStreamPlayer3D</keyword>
+          <keyword>BackBufferCopy</keyword>
+          <keyword>BaseButton</keyword>
+          <keyword>Bone2D</keyword>
+          <keyword>BoneAttachment3D</keyword>
+          <keyword>BoneConstraint3D</keyword>
+          <keyword>BoxContainer</keyword>
+          <keyword>Button</keyword>
+          <keyword>Camera2D</keyword>
+          <keyword>Camera3D</keyword>
+          <keyword>CanvasGroup</keyword>
+          <keyword>CanvasItem</keyword>
+          <keyword>CanvasLayer</keyword>
+          <keyword>CanvasModulate</keyword>
+          <keyword>CenterContainer</keyword>
+          <keyword>CharacterBody2D</keyword>
+          <keyword>CharacterBody3D</keyword>
+          <keyword>CheckBox</keyword>
+          <keyword>CheckButton</keyword>
+          <keyword>CodeEdit</keyword>
+          <keyword>CollisionObject2D</keyword>
+          <keyword>CollisionObject3D</keyword>
+          <keyword>CollisionPolygon2D</keyword>
+          <keyword>CollisionPolygon3D</keyword>
+          <keyword>CollisionShape2D</keyword>
+          <keyword>CollisionShape3D</keyword>
+          <keyword>ColorPicker</keyword>
+          <keyword>ColorPickerButton</keyword>
+          <keyword>ColorRect</keyword>
+          <keyword>ConeTwistJoint3D</keyword>
+          <keyword>ConfirmationDialog</keyword>
+          <keyword>Container</keyword>
+          <keyword>Control</keyword>
+          <keyword>ConvertTransformModifier3D</keyword>
+          <keyword>CopyTransformModifier3D</keyword>
+          <keyword>CPUParticles2D</keyword>
+          <keyword>CPUParticles3D</keyword>
+          <keyword>CSGBox3D</keyword>
+          <keyword>CSGCombiner3D</keyword>
+          <keyword>CSGCylinder3D</keyword>
+          <keyword>CSGMesh3D</keyword>
+          <keyword>CSGPolygon3D</keyword>
+          <keyword>CSGPrimitive3D</keyword>
+          <keyword>CSGShape3D</keyword>
+          <keyword>CSGSphere3D</keyword>
+          <keyword>CSGTorus3D</keyword>
+          <keyword>DampedSpringJoint2D</keyword>
+          <keyword>Decal</keyword>
+          <keyword>DirectionalLight2D</keyword>
+          <keyword>DirectionalLight3D</keyword>
+          <keyword>EditorCommandPalette</keyword>
+          <keyword>EditorFileDialog</keyword>
+          <keyword>EditorFileSystem</keyword>
+          <keyword>EditorInspector</keyword>
+          <keyword>EditorPlugin</keyword>
+          <keyword>EditorProperty</keyword>
+          <keyword>EditorResourcePicker</keyword>
+          <keyword>EditorResourcePreview</keyword>
+          <keyword>EditorScriptPicker</keyword>
+          <keyword>EditorSpinSlider</keyword>
+          <keyword>EditorToaster</keyword>
+          <keyword>FileDialog</keyword>
+          <keyword>FileSystemDock</keyword>
+          <keyword>FlowContainer</keyword>
+          <keyword>FogVolume</keyword>
+          <keyword>FoldableContainer</keyword>
+          <keyword>Generic6DOFJoint3D</keyword>
+          <keyword>GeometryInstance3D</keyword>
+          <keyword>GPUParticles2D</keyword>
+          <keyword>GPUParticles3D</keyword>
+          <keyword>GPUParticlesAttractor3D</keyword>
+          <keyword>GPUParticlesAttractorBox3D</keyword>
+          <keyword>GPUParticlesAttractorSphere3D</keyword>
+          <keyword>GPUParticlesAttractorVectorField3D</keyword>
+          <keyword>GPUParticlesCollision3D</keyword>
+          <keyword>GPUParticlesCollisionBox3D</keyword>
+          <keyword>GPUParticlesCollisionHeightField3D</keyword>
+          <keyword>GPUParticlesCollisionSDF3D</keyword>
+          <keyword>GPUParticlesCollisionSphere3D</keyword>
+          <keyword>GraphEdit</keyword>
+          <keyword>GraphElement</keyword>
+          <keyword>GraphFrame</keyword>
+          <keyword>GraphNode</keyword>
+          <keyword>GridContainer</keyword>
+          <keyword>GridMap</keyword>
+          <keyword>GridMapEditorPlugin</keyword>
+          <keyword>GrooveJoint2D</keyword>
+          <keyword>HBoxContainer</keyword>
+          <keyword>HFlowContainer</keyword>
+          <keyword>HingeJoint3D</keyword>
+          <keyword>HScrollBar</keyword>
+          <keyword>HSeparator</keyword>
+          <keyword>HSlider</keyword>
+          <keyword>HSplitContainer</keyword>
+          <keyword>HTTPRequest</keyword>
+          <keyword>ImporterMeshInstance3D</keyword>
+          <keyword>InstancePlaceholder</keyword>
+          <keyword>ItemList</keyword>
+          <keyword>Joint2D</keyword>
+          <keyword>Joint3D</keyword>
+          <keyword>Label</keyword>
+          <keyword>Label3D</keyword>
+          <keyword>Light2D</keyword>
+          <keyword>Light3D</keyword>
+          <keyword>LightmapGI</keyword>
+          <keyword>LightmapProbe</keyword>
+          <keyword>LightOccluder2D</keyword>
+          <keyword>Line2D</keyword>
+          <keyword>LineEdit</keyword>
+          <keyword>LinkButton</keyword>
+          <keyword>LookAtModifier3D</keyword>
+          <keyword>MarginContainer</keyword>
+          <keyword>Marker2D</keyword>
+          <keyword>Marker3D</keyword>
+          <keyword>MenuBar</keyword>
+          <keyword>MenuButton</keyword>
+          <keyword>MeshInstance2D</keyword>
+          <keyword>MeshInstance3D</keyword>
+          <keyword>MissingNode</keyword>
+          <keyword>ModifierBoneTarget3D</keyword>
+          <keyword>MultiMeshInstance2D</keyword>
+          <keyword>MultiMeshInstance3D</keyword>
+          <keyword>MultiplayerSpawner</keyword>
+          <keyword>MultiplayerSynchronizer</keyword>
+          <keyword>NavigationAgent2D</keyword>
+          <keyword>NavigationAgent3D</keyword>
+          <keyword>NavigationLink2D</keyword>
+          <keyword>NavigationLink3D</keyword>
+          <keyword>NavigationObstacle2D</keyword>
+          <keyword>NavigationObstacle3D</keyword>
+          <keyword>NavigationRegion2D</keyword>
+          <keyword>NavigationRegion3D</keyword>
+          <keyword>NinePatchRect</keyword>
+          <keyword>Node2D</keyword>
+          <keyword>Node3D</keyword>
+          <keyword>OccluderInstance3D</keyword>
+          <keyword>OmniLight3D</keyword>
+          <keyword>OpenXRBindingModifierEditor</keyword>
+          <keyword>OpenXRCompositionLayer</keyword>
+          <keyword>OpenXRCompositionLayerCylinder</keyword>
+          <keyword>OpenXRCompositionLayerEquirect</keyword>
+          <keyword>OpenXRCompositionLayerQuad</keyword>
+          <keyword>OpenXRHand</keyword>
+          <keyword>OpenXRInteractionProfileEditor</keyword>
+          <keyword>OpenXRInteractionProfileEditorBase</keyword>
+          <keyword>OpenXRRenderModel</keyword>
+          <keyword>OpenXRRenderModelManager</keyword>
+          <keyword>OpenXRVisibilityMask</keyword>
+          <keyword>OptionButton</keyword>
+          <keyword>Panel</keyword>
+          <keyword>PanelContainer</keyword>
+          <keyword>Parallax2D</keyword>
+          <keyword>ParallaxBackground</keyword>
+          <keyword>ParallaxLayer</keyword>
+          <keyword>Path2D</keyword>
+          <keyword>Path3D</keyword>
+          <keyword>PathFollow2D</keyword>
+          <keyword>PathFollow3D</keyword>
+          <keyword>PhysicalBone2D</keyword>
+          <keyword>PhysicalBone3D</keyword>
+          <keyword>PhysicalBoneSimulator3D</keyword>
+          <keyword>PhysicsBody2D</keyword>
+          <keyword>PhysicsBody3D</keyword>
+          <keyword>PinJoint2D</keyword>
+          <keyword>PinJoint3D</keyword>
+          <keyword>PointLight2D</keyword>
+          <keyword>Polygon2D</keyword>
+          <keyword>Popup</keyword>
+          <keyword>PopupMenu</keyword>
+          <keyword>PopupPanel</keyword>
+          <keyword>ProgressBar</keyword>
+          <keyword>Range</keyword>
+          <keyword>RayCast2D</keyword>
+          <keyword>RayCast3D</keyword>
+          <keyword>ReferenceRect</keyword>
+          <keyword>ReflectionProbe</keyword>
+          <keyword>RemoteTransform2D</keyword>
+          <keyword>RemoteTransform3D</keyword>
+          <keyword>ResourcePreloader</keyword>
+          <keyword>RetargetModifier3D</keyword>
+          <keyword>RichTextLabel</keyword>
+          <keyword>RigidBody2D</keyword>
+          <keyword>RigidBody3D</keyword>
+          <keyword>RootMotionView</keyword>
+          <keyword>ScriptCreateDialog</keyword>
+          <keyword>ScriptEditor</keyword>
+          <keyword>ScriptEditorBase</keyword>
+          <keyword>ScrollBar</keyword>
+          <keyword>ScrollContainer</keyword>
+          <keyword>Separator</keyword>
+          <keyword>ShaderGlobalsOverride</keyword>
+          <keyword>ShapeCast2D</keyword>
+          <keyword>ShapeCast3D</keyword>
+          <keyword>Skeleton2D</keyword>
+          <keyword>Skeleton3D</keyword>
+          <keyword>SkeletonIK3D</keyword>
+          <keyword>SkeletonModifier3D</keyword>
+          <keyword>Slider</keyword>
+          <keyword>SliderJoint3D</keyword>
+          <keyword>SoftBody3D</keyword>
+          <keyword>SpinBox</keyword>
+          <keyword>SplitContainer</keyword>
+          <keyword>SpotLight3D</keyword>
+          <keyword>SpringArm3D</keyword>
+          <keyword>SpringBoneCollision3D</keyword>
+          <keyword>SpringBoneCollisionCapsule3D</keyword>
+          <keyword>SpringBoneCollisionPlane3D</keyword>
+          <keyword>SpringBoneCollisionSphere3D</keyword>
+          <keyword>SpringBoneSimulator3D</keyword>
+          <keyword>Sprite2D</keyword>
+          <keyword>Sprite3D</keyword>
+          <keyword>SpriteBase3D</keyword>
+          <keyword>StaticBody2D</keyword>
+          <keyword>StaticBody3D</keyword>
+          <keyword>StatusIndicator</keyword>
+          <keyword>SubViewport</keyword>
+          <keyword>SubViewportContainer</keyword>
+          <keyword>TabBar</keyword>
+          <keyword>TabContainer</keyword>
+          <keyword>TextEdit</keyword>
+          <keyword>TextureButton</keyword>
+          <keyword>TextureProgressBar</keyword>
+          <keyword>TextureRect</keyword>
+          <keyword>TileMap</keyword>
+          <keyword>TileMapLayer</keyword>
+          <keyword>Timer</keyword>
+          <keyword>TouchScreenButton</keyword>
+          <keyword>Tree</keyword>
+          <keyword>VBoxContainer</keyword>
+          <keyword>VehicleBody3D</keyword>
+          <keyword>VehicleWheel3D</keyword>
+          <keyword>VFlowContainer</keyword>
+          <keyword>VideoStreamPlayer</keyword>
+          <keyword>Viewport</keyword>
+          <keyword>VisibleOnScreenEnabler2D</keyword>
+          <keyword>VisibleOnScreenEnabler3D</keyword>
+          <keyword>VisibleOnScreenNotifier2D</keyword>
+          <keyword>VisibleOnScreenNotifier3D</keyword>
+          <keyword>VisualInstance3D</keyword>
+          <keyword>VoxelGI</keyword>
+          <keyword>VScrollBar</keyword>
+          <keyword>VSeparator</keyword>
+          <keyword>VSlider</keyword>
+          <keyword>VSplitContainer</keyword>
+          <keyword>Window</keyword>
+          <keyword>WorldEnvironment</keyword>
+          <keyword>XRAnchor3D</keyword>
+          <keyword>XRBodyModifier3D</keyword>
+          <keyword>XRCamera3D</keyword>
+          <keyword>XRController3D</keyword>
+          <keyword>XRFaceModifier3D</keyword>
+          <keyword>XRHandModifier3D</keyword>
+          <keyword>XRNode3D</keyword>
+          <keyword>XROrigin3D</keyword>
+          <keyword>Resource</keyword>
+          <keyword>AnimatedTexture</keyword>
+          <keyword>Animation</keyword>
+          <keyword>AnimationLibrary</keyword>
+          <keyword>AnimationNode</keyword>
+          <keyword>AnimationNodeAdd2</keyword>
+          <keyword>AnimationNodeAdd3</keyword>
+          <keyword>AnimationNodeAnimation</keyword>
+          <keyword>AnimationNodeBlend2</keyword>
+          <keyword>AnimationNodeBlend3</keyword>
+          <keyword>AnimationNodeBlendSpace1D</keyword>
+          <keyword>AnimationNodeBlendSpace2D</keyword>
+          <keyword>AnimationNodeBlendTree</keyword>
+          <keyword>AnimationNodeExtension</keyword>
+          <keyword>AnimationNodeOneShot</keyword>
+          <keyword>AnimationNodeOutput</keyword>
+          <keyword>AnimationNodeStateMachine</keyword>
+          <keyword>AnimationNodeStateMachinePlayback</keyword>
+          <keyword>AnimationNodeStateMachineTransition</keyword>
+          <keyword>AnimationNodeSub2</keyword>
+          <keyword>AnimationNodeSync</keyword>
+          <keyword>AnimationNodeTimeScale</keyword>
+          <keyword>AnimationNodeTimeSeek</keyword>
+          <keyword>AnimationNodeTransition</keyword>
+          <keyword>AnimationRootNode</keyword>
+          <keyword>ArrayMesh</keyword>
+          <keyword>ArrayOccluder3D</keyword>
+          <keyword>AtlasTexture</keyword>
+          <keyword>AudioBusLayout</keyword>
+          <keyword>AudioEffect</keyword>
+          <keyword>AudioEffectAmplify</keyword>
+          <keyword>AudioEffectBandLimitFilter</keyword>
+          <keyword>AudioEffectBandPassFilter</keyword>
+          <keyword>AudioEffectCapture</keyword>
+          <keyword>AudioEffectChorus</keyword>
+          <keyword>AudioEffectCompressor</keyword>
+          <keyword>AudioEffectDelay</keyword>
+          <keyword>AudioEffectDistortion</keyword>
+          <keyword>AudioEffectEQ</keyword>
+          <keyword>AudioEffectEQ10</keyword>
+          <keyword>AudioEffectEQ21</keyword>
+          <keyword>AudioEffectEQ6</keyword>
+          <keyword>AudioEffectFilter</keyword>
+          <keyword>AudioEffectHardLimiter</keyword>
+          <keyword>AudioEffectHighPassFilter</keyword>
+          <keyword>AudioEffectHighShelfFilter</keyword>
+          <keyword>AudioEffectLimiter</keyword>
+          <keyword>AudioEffectLowPassFilter</keyword>
+          <keyword>AudioEffectLowShelfFilter</keyword>
+          <keyword>AudioEffectNotchFilter</keyword>
+          <keyword>AudioEffectPanner</keyword>
+          <keyword>AudioEffectPhaser</keyword>
+          <keyword>AudioEffectPitchShift</keyword>
+          <keyword>AudioEffectRecord</keyword>
+          <keyword>AudioEffectReverb</keyword>
+          <keyword>AudioEffectSpectrumAnalyzer</keyword>
+          <keyword>AudioEffectStereoEnhance</keyword>
+          <keyword>AudioStream</keyword>
+          <keyword>AudioStreamGenerator</keyword>
+          <keyword>AudioStreamInteractive</keyword>
+          <keyword>AudioStreamMicrophone</keyword>
+          <keyword>AudioStreamMP3</keyword>
+          <keyword>AudioStreamOggVorbis</keyword>
+          <keyword>AudioStreamPlaylist</keyword>
+          <keyword>AudioStreamPolyphonic</keyword>
+          <keyword>AudioStreamRandomizer</keyword>
+          <keyword>AudioStreamSynchronized</keyword>
+          <keyword>AudioStreamWAV</keyword>
+          <keyword>BaseMaterial3D</keyword>
+          <keyword>BitMap</keyword>
+          <keyword>BoneMap</keyword>
+          <keyword>BoxMesh</keyword>
+          <keyword>BoxOccluder3D</keyword>
+          <keyword>BoxShape3D</keyword>
+          <keyword>ButtonGroup</keyword>
+          <keyword>CameraAttributes</keyword>
+          <keyword>CameraAttributesPhysical</keyword>
+          <keyword>CameraAttributesPractical</keyword>
+          <keyword>CameraTexture</keyword>
+          <keyword>CanvasItemMaterial</keyword>
+          <keyword>CanvasTexture</keyword>
+          <keyword>CapsuleMesh</keyword>
+          <keyword>CapsuleShape2D</keyword>
+          <keyword>CapsuleShape3D</keyword>
+          <keyword>CircleShape2D</keyword>
+          <keyword>CodeHighlighter</keyword>
+          <keyword>ColorPalette</keyword>
+          <keyword>Compositor</keyword>
+          <keyword>CompositorEffect</keyword>
+          <keyword>CompressedCubemap</keyword>
+          <keyword>CompressedCubemapArray</keyword>
+          <keyword>CompressedTexture2D</keyword>
+          <keyword>CompressedTexture2DArray</keyword>
+          <keyword>CompressedTexture3D</keyword>
+          <keyword>CompressedTextureLayered</keyword>
+          <keyword>ConcavePolygonShape2D</keyword>
+          <keyword>ConcavePolygonShape3D</keyword>
+          <keyword>ConvexPolygonShape2D</keyword>
+          <keyword>ConvexPolygonShape3D</keyword>
+          <keyword>CryptoKey</keyword>
+          <keyword>CSharpScript</keyword>
+          <keyword>Cubemap</keyword>
+          <keyword>CubemapArray</keyword>
+          <keyword>Curve</keyword>
+          <keyword>Curve2D</keyword>
+          <keyword>Curve3D</keyword>
+          <keyword>CurveTexture</keyword>
+          <keyword>CurveXYZTexture</keyword>
+          <keyword>CylinderMesh</keyword>
+          <keyword>CylinderShape3D</keyword>
+          <keyword>DPITexture</keyword>
+          <keyword>EditorNode3DGizmoPlugin</keyword>
+          <keyword>EditorSettings</keyword>
+          <keyword>EditorSyntaxHighlighter</keyword>
+          <keyword>Environment</keyword>
+          <keyword>ExternalTexture</keyword>
+          <keyword>FastNoiseLite</keyword>
+          <keyword>FBXDocument</keyword>
+          <keyword>FBXState</keyword>
+          <keyword>FogMaterial</keyword>
+          <keyword>FoldableGroup</keyword>
+          <keyword>Font</keyword>
+          <keyword>FontFile</keyword>
+          <keyword>FontVariation</keyword>
+          <keyword>GDExtension</keyword>
+          <keyword>GDScript</keyword>
+          <keyword>GDScriptSyntaxHighlighter</keyword>
+          <keyword>GLTFAccessor</keyword>
+          <keyword>GLTFAnimation</keyword>
+          <keyword>GLTFBufferView</keyword>
+          <keyword>GLTFCamera</keyword>
+          <keyword>GLTFDocument</keyword>
+          <keyword>GLTFDocumentExtension</keyword>
+          <keyword>GLTFDocumentExtensionConvertImporterMesh</keyword>
+          <keyword>GLTFLight</keyword>
+          <keyword>GLTFMesh</keyword>
+          <keyword>GLTFNode</keyword>
+          <keyword>GLTFPhysicsBody</keyword>
+          <keyword>GLTFPhysicsShape</keyword>
+          <keyword>GLTFSkeleton</keyword>
+          <keyword>GLTFSkin</keyword>
+          <keyword>GLTFSpecGloss</keyword>
+          <keyword>GLTFState</keyword>
+          <keyword>GLTFTexture</keyword>
+          <keyword>GLTFTextureSampler</keyword>
+          <keyword>Gradient</keyword>
+          <keyword>GradientTexture1D</keyword>
+          <keyword>GradientTexture2D</keyword>
+          <keyword>HeightMapShape3D</keyword>
+          <keyword>Image</keyword>
+          <keyword>ImageTexture</keyword>
+          <keyword>ImageTexture3D</keyword>
+          <keyword>ImageTextureLayered</keyword>
+          <keyword>ImmediateMesh</keyword>
+          <keyword>ImporterMesh</keyword>
+          <keyword>InputEvent</keyword>
+          <keyword>InputEventAction</keyword>
+          <keyword>InputEventFromWindow</keyword>
+          <keyword>InputEventGesture</keyword>
+          <keyword>InputEventJoypadButton</keyword>
+          <keyword>InputEventJoypadMotion</keyword>
+          <keyword>InputEventKey</keyword>
+          <keyword>InputEventMagnifyGesture</keyword>
+          <keyword>InputEventMIDI</keyword>
+          <keyword>InputEventMouse</keyword>
+          <keyword>InputEventMouseButton</keyword>
+          <keyword>InputEventMouseMotion</keyword>
+          <keyword>InputEventPanGesture</keyword>
+          <keyword>InputEventScreenDrag</keyword>
+          <keyword>InputEventScreenTouch</keyword>
+          <keyword>InputEventShortcut</keyword>
+          <keyword>InputEventWithModifiers</keyword>
+          <keyword>JSON</keyword>
+          <keyword>LabelSettings</keyword>
+          <keyword>LightmapGIData</keyword>
+          <keyword>Material</keyword>
+          <keyword>Mesh</keyword>
+          <keyword>MeshLibrary</keyword>
+          <keyword>MeshTexture</keyword>
+          <keyword>MissingResource</keyword>
+          <keyword>MultiMesh</keyword>
+          <keyword>NavigationMesh</keyword>
+          <keyword>NavigationMeshSourceGeometryData2D</keyword>
+          <keyword>NavigationMeshSourceGeometryData3D</keyword>
+          <keyword>NavigationPolygon</keyword>
+          <keyword>Noise</keyword>
+          <keyword>NoiseTexture2D</keyword>
+          <keyword>NoiseTexture3D</keyword>
+          <keyword>Occluder3D</keyword>
+          <keyword>OccluderPolygon2D</keyword>
+          <keyword>OggPacketSequence</keyword>
+          <keyword>OpenXRAction</keyword>
+          <keyword>OpenXRActionBindingModifier</keyword>
+          <keyword>OpenXRActionMap</keyword>
+          <keyword>OpenXRActionSet</keyword>
+          <keyword>OpenXRAnalogThresholdModifier</keyword>
+          <keyword>OpenXRBindingModifier</keyword>
+          <keyword>OpenXRDpadBindingModifier</keyword>
+          <keyword>OpenXRHapticBase</keyword>
+          <keyword>OpenXRHapticVibration</keyword>
+          <keyword>OpenXRInteractionProfile</keyword>
+          <keyword>OpenXRIPBinding</keyword>
+          <keyword>OpenXRIPBindingModifier</keyword>
+          <keyword>OptimizedTranslation</keyword>
+          <keyword>ORMMaterial3D</keyword>
+          <keyword>PackedDataContainer</keyword>
+          <keyword>PackedScene</keyword>
+          <keyword>PanoramaSkyMaterial</keyword>
+          <keyword>ParticleProcessMaterial</keyword>
+          <keyword>PhysicalSkyMaterial</keyword>
+          <keyword>PhysicsMaterial</keyword>
+          <keyword>PlaceholderCubemap</keyword>
+          <keyword>PlaceholderCubemapArray</keyword>
+          <keyword>PlaceholderMaterial</keyword>
+          <keyword>PlaceholderMesh</keyword>
+          <keyword>PlaceholderTexture2D</keyword>
+          <keyword>PlaceholderTexture2DArray</keyword>
+          <keyword>PlaceholderTexture3D</keyword>
+          <keyword>PlaceholderTextureLayered</keyword>
+          <keyword>PlaneMesh</keyword>
+          <keyword>PointMesh</keyword>
+          <keyword>PolygonOccluder3D</keyword>
+          <keyword>PolygonPathFinder</keyword>
+          <keyword>PortableCompressedTexture2D</keyword>
+          <keyword>PrimitiveMesh</keyword>
+          <keyword>PrismMesh</keyword>
+          <keyword>ProceduralSkyMaterial</keyword>
+          <keyword>QuadMesh</keyword>
+          <keyword>QuadOccluder3D</keyword>
+          <keyword>RDShaderFile</keyword>
+          <keyword>RDShaderSPIRV</keyword>
+          <keyword>RectangleShape2D</keyword>
+          <keyword>RibbonTrailMesh</keyword>
+          <keyword>RichTextEffect</keyword>
+          <keyword>SceneReplicationConfig</keyword>
+          <keyword>Script</keyword>
+          <keyword>ScriptExtension</keyword>
+          <keyword>SegmentShape2D</keyword>
+          <keyword>SeparationRayShape2D</keyword>
+          <keyword>SeparationRayShape3D</keyword>
+          <keyword>Shader</keyword>
+          <keyword>ShaderInclude</keyword>
+          <keyword>ShaderMaterial</keyword>
+          <keyword>Shape2D</keyword>
+          <keyword>Shape3D</keyword>
+          <keyword>Shortcut</keyword>
+          <keyword>SkeletonModification2D</keyword>
+          <keyword>SkeletonModification2DCCDIK</keyword>
+          <keyword>SkeletonModification2DFABRIK</keyword>
+          <keyword>SkeletonModification2DJiggle</keyword>
+          <keyword>SkeletonModification2DLookAt</keyword>
+          <keyword>SkeletonModification2DPhysicalBones</keyword>
+          <keyword>SkeletonModification2DStackHolder</keyword>
+          <keyword>SkeletonModification2DTwoBoneIK</keyword>
+          <keyword>SkeletonModificationStack2D</keyword>
+          <keyword>SkeletonProfile</keyword>
+          <keyword>SkeletonProfileHumanoid</keyword>
+          <keyword>Skin</keyword>
+          <keyword>Sky</keyword>
+          <keyword>SphereMesh</keyword>
+          <keyword>SphereOccluder3D</keyword>
+          <keyword>SphereShape3D</keyword>
+          <keyword>SpriteFrames</keyword>
+          <keyword>StandardMaterial3D</keyword>
+          <keyword>StyleBox</keyword>
+          <keyword>StyleBoxEmpty</keyword>
+          <keyword>StyleBoxFlat</keyword>
+          <keyword>StyleBoxLine</keyword>
+          <keyword>StyleBoxTexture</keyword>
+          <keyword>SyntaxHighlighter</keyword>
+          <keyword>SystemFont</keyword>
+          <keyword>TextMesh</keyword>
+          <keyword>Texture</keyword>
+          <keyword>Texture2D</keyword>
+          <keyword>Texture2DArray</keyword>
+          <keyword>Texture2DArrayRD</keyword>
+          <keyword>Texture2DRD</keyword>
+          <keyword>Texture3D</keyword>
+          <keyword>Texture3DRD</keyword>
+          <keyword>TextureCubemapArrayRD</keyword>
+          <keyword>TextureCubemapRD</keyword>
+          <keyword>TextureLayered</keyword>
+          <keyword>TextureLayeredRD</keyword>
+          <keyword>Theme</keyword>
+          <keyword>TileMapPattern</keyword>
+          <keyword>TileSet</keyword>
+          <keyword>TileSetAtlasSource</keyword>
+          <keyword>TileSetScenesCollectionSource</keyword>
+          <keyword>TileSetSource</keyword>
+          <keyword>TorusMesh</keyword>
+          <keyword>Translation</keyword>
+          <keyword>TubeTrailMesh</keyword>
+          <keyword>VideoStream</keyword>
+          <keyword>VideoStreamPlayback</keyword>
+          <keyword>VideoStreamTheora</keyword>
+          <keyword>ViewportTexture</keyword>
+          <keyword>VisualShader</keyword>
+          <keyword>VisualShaderNode</keyword>
+          <keyword>VisualShaderNodeBillboard</keyword>
+          <keyword>VisualShaderNodeBooleanConstant</keyword>
+          <keyword>VisualShaderNodeBooleanParameter</keyword>
+          <keyword>VisualShaderNodeClamp</keyword>
+          <keyword>VisualShaderNodeColorConstant</keyword>
+          <keyword>VisualShaderNodeColorFunc</keyword>
+          <keyword>VisualShaderNodeColorOp</keyword>
+          <keyword>VisualShaderNodeColorParameter</keyword>
+          <keyword>VisualShaderNodeComment</keyword>
+          <keyword>VisualShaderNodeCompare</keyword>
+          <keyword>VisualShaderNodeConstant</keyword>
+          <keyword>VisualShaderNodeCubemap</keyword>
+          <keyword>VisualShaderNodeCubemapParameter</keyword>
+          <keyword>VisualShaderNodeCurveTexture</keyword>
+          <keyword>VisualShaderNodeCurveXYZTexture</keyword>
+          <keyword>VisualShaderNodeCustom</keyword>
+          <keyword>VisualShaderNodeDerivativeFunc</keyword>
+          <keyword>VisualShaderNodeDeterminant</keyword>
+          <keyword>VisualShaderNodeDistanceFade</keyword>
+          <keyword>VisualShaderNodeDotProduct</keyword>
+          <keyword>VisualShaderNodeExpression</keyword>
+          <keyword>VisualShaderNodeFaceForward</keyword>
+          <keyword>VisualShaderNodeFloatConstant</keyword>
+          <keyword>VisualShaderNodeFloatFunc</keyword>
+          <keyword>VisualShaderNodeFloatOp</keyword>
+          <keyword>VisualShaderNodeFloatParameter</keyword>
+          <keyword>VisualShaderNodeFrame</keyword>
+          <keyword>VisualShaderNodeFresnel</keyword>
+          <keyword>VisualShaderNodeGlobalExpression</keyword>
+          <keyword>VisualShaderNodeGroupBase</keyword>
+          <keyword>VisualShaderNodeIf</keyword>
+          <keyword>VisualShaderNodeInput</keyword>
+          <keyword>VisualShaderNodeIntConstant</keyword>
+          <keyword>VisualShaderNodeIntFunc</keyword>
+          <keyword>VisualShaderNodeIntOp</keyword>
+          <keyword>VisualShaderNodeIntParameter</keyword>
+          <keyword>VisualShaderNodeIs</keyword>
+          <keyword>VisualShaderNodeLinearSceneDepth</keyword>
+          <keyword>VisualShaderNodeMix</keyword>
+          <keyword>VisualShaderNodeMultiplyAdd</keyword>
+          <keyword>VisualShaderNodeOuterProduct</keyword>
+          <keyword>VisualShaderNodeOutput</keyword>
+          <keyword>VisualShaderNodeParameter</keyword>
+          <keyword>VisualShaderNodeParameterRef</keyword>
+          <keyword>VisualShaderNodeParticleAccelerator</keyword>
+          <keyword>VisualShaderNodeParticleBoxEmitter</keyword>
+          <keyword>VisualShaderNodeParticleConeVelocity</keyword>
+          <keyword>VisualShaderNodeParticleEmit</keyword>
+          <keyword>VisualShaderNodeParticleEmitter</keyword>
+          <keyword>VisualShaderNodeParticleMeshEmitter</keyword>
+          <keyword>VisualShaderNodeParticleMultiplyByAxisAngle</keyword>
+          <keyword>VisualShaderNodeParticleOutput</keyword>
+          <keyword>VisualShaderNodeParticleRandomness</keyword>
+          <keyword>VisualShaderNodeParticleRingEmitter</keyword>
+          <keyword>VisualShaderNodeParticleSphereEmitter</keyword>
+          <keyword>VisualShaderNodeProximityFade</keyword>
+          <keyword>VisualShaderNodeRandomRange</keyword>
+          <keyword>VisualShaderNodeRemap</keyword>
+          <keyword>VisualShaderNodeReroute</keyword>
+          <keyword>VisualShaderNodeResizableBase</keyword>
+          <keyword>VisualShaderNodeRotationByAxis</keyword>
+          <keyword>VisualShaderNodeSample3D</keyword>
+          <keyword>VisualShaderNodeScreenNormalWorldSpace</keyword>
+          <keyword>VisualShaderNodeScreenUVToSDF</keyword>
+          <keyword>VisualShaderNodeSDFRaymarch</keyword>
+          <keyword>VisualShaderNodeSDFToScreenUV</keyword>
+          <keyword>VisualShaderNodeSmoothStep</keyword>
+          <keyword>VisualShaderNodeStep</keyword>
+          <keyword>VisualShaderNodeSwitch</keyword>
+          <keyword>VisualShaderNodeTexture</keyword>
+          <keyword>VisualShaderNodeTexture2DArray</keyword>
+          <keyword>VisualShaderNodeTexture2DArrayParameter</keyword>
+          <keyword>VisualShaderNodeTexture2DParameter</keyword>
+          <keyword>VisualShaderNodeTexture3D</keyword>
+          <keyword>VisualShaderNodeTexture3DParameter</keyword>
+          <keyword>VisualShaderNodeTextureParameter</keyword>
+          <keyword>VisualShaderNodeTextureParameterTriplanar</keyword>
+          <keyword>VisualShaderNodeTextureSDF</keyword>
+          <keyword>VisualShaderNodeTextureSDFNormal</keyword>
+          <keyword>VisualShaderNodeTransformCompose</keyword>
+          <keyword>VisualShaderNodeTransformConstant</keyword>
+          <keyword>VisualShaderNodeTransformDecompose</keyword>
+          <keyword>VisualShaderNodeTransformFunc</keyword>
+          <keyword>VisualShaderNodeTransformOp</keyword>
+          <keyword>VisualShaderNodeTransformParameter</keyword>
+          <keyword>VisualShaderNodeTransformVecMult</keyword>
+          <keyword>VisualShaderNodeUIntConstant</keyword>
+          <keyword>VisualShaderNodeUIntFunc</keyword>
+          <keyword>VisualShaderNodeUIntOp</keyword>
+          <keyword>VisualShaderNodeUIntParameter</keyword>
+          <keyword>VisualShaderNodeUVFunc</keyword>
+          <keyword>VisualShaderNodeUVPolarCoord</keyword>
+          <keyword>VisualShaderNodeVarying</keyword>
+          <keyword>VisualShaderNodeVaryingGetter</keyword>
+          <keyword>VisualShaderNodeVaryingSetter</keyword>
+          <keyword>VisualShaderNodeVec2Constant</keyword>
+          <keyword>VisualShaderNodeVec2Parameter</keyword>
+          <keyword>VisualShaderNodeVec3Constant</keyword>
+          <keyword>VisualShaderNodeVec3Parameter</keyword>
+          <keyword>VisualShaderNodeVec4Constant</keyword>
+          <keyword>VisualShaderNodeVec4Parameter</keyword>
+          <keyword>VisualShaderNodeVectorBase</keyword>
+          <keyword>VisualShaderNodeVectorCompose</keyword>
+          <keyword>VisualShaderNodeVectorDecompose</keyword>
+          <keyword>VisualShaderNodeVectorDistance</keyword>
+          <keyword>VisualShaderNodeVectorFunc</keyword>
+          <keyword>VisualShaderNodeVectorLen</keyword>
+          <keyword>VisualShaderNodeVectorOp</keyword>
+          <keyword>VisualShaderNodeVectorRefract</keyword>
+          <keyword>VisualShaderNodeWorldPositionFromDepth</keyword>
+          <keyword>VoxelGIData</keyword>
+          <keyword>World2D</keyword>
+          <keyword>World3D</keyword>
+          <keyword>WorldBoundaryShape2D</keyword>
+          <keyword>WorldBoundaryShape3D</keyword>
+          <keyword>X509Certificate</keyword>
+          <keyword>Object</keyword>
+          <keyword>AESContext</keyword>
+          <keyword>AStar2D</keyword>
+          <keyword>AStar3D</keyword>
+          <keyword>AStarGrid2D</keyword>
+          <keyword>AudioEffectInstance</keyword>
+          <keyword>AudioEffectSpectrumAnalyzerInstance</keyword>
+          <keyword>AudioSample</keyword>
+          <keyword>AudioSamplePlayback</keyword>
+          <keyword>AudioServer</keyword>
+          <keyword>AudioStreamGeneratorPlayback</keyword>
+          <keyword>AudioStreamPlayback</keyword>
+          <keyword>AudioStreamPlaybackInteractive</keyword>
+          <keyword>AudioStreamPlaybackOggVorbis</keyword>
+          <keyword>AudioStreamPlaybackPlaylist</keyword>
+          <keyword>AudioStreamPlaybackPolyphonic</keyword>
+          <keyword>AudioStreamPlaybackResampled</keyword>
+          <keyword>AudioStreamPlaybackSynchronized</keyword>
+          <keyword>CallbackTweener</keyword>
+          <keyword>CameraFeed</keyword>
+          <keyword>CameraServer</keyword>
+          <keyword>CharFXTransform</keyword>
+          <keyword>ClassDB</keyword>
+          <keyword>ConfigFile</keyword>
+          <keyword>Crypto</keyword>
+          <keyword>DirAccess</keyword>
+          <keyword>DisplayServer</keyword>
+          <keyword>DTLSServer</keyword>
+          <keyword>EditorContextMenuPlugin</keyword>
+          <keyword>EditorDebuggerPlugin</keyword>
+          <keyword>EditorDebuggerSession</keyword>
+          <keyword>EditorExportPlatform</keyword>
+          <keyword>EditorExportPlatformAndroid</keyword>
+          <keyword>EditorExportPlatformAppleEmbedded</keyword>
+          <keyword>EditorExportPlatformExtension</keyword>
+          <keyword>EditorExportPlatformIOS</keyword>
+          <keyword>EditorExportPlatformLinuxBSD</keyword>
+          <keyword>EditorExportPlatformMacOS</keyword>
+          <keyword>EditorExportPlatformPC</keyword>
+          <keyword>EditorExportPlatformVisionOS</keyword>
+          <keyword>EditorExportPlatformWeb</keyword>
+          <keyword>EditorExportPlatformWindows</keyword>
+          <keyword>EditorExportPlugin</keyword>
+          <keyword>EditorExportPreset</keyword>
+          <keyword>EditorFeatureProfile</keyword>
+          <keyword>EditorFileSystemDirectory</keyword>
+          <keyword>EditorFileSystemImportFormatSupportQuery</keyword>
+          <keyword>EditorImportPlugin</keyword>
+          <keyword>EditorInspectorPlugin</keyword>
+          <keyword>EditorInterface</keyword>
+          <keyword>EditorNode3DGizmo</keyword>
+          <keyword>EditorPaths</keyword>
+          <keyword>EditorResourceConversionPlugin</keyword>
+          <keyword>EditorResourcePreviewGenerator</keyword>
+          <keyword>EditorResourceTooltipPlugin</keyword>
+          <keyword>EditorSceneFormatImporter</keyword>
+          <keyword>EditorSceneFormatImporterBlend</keyword>
+          <keyword>EditorSceneFormatImporterFBX2GLTF</keyword>
+          <keyword>EditorSceneFormatImporterGLTF</keyword>
+          <keyword>EditorSceneFormatImporterUFBX</keyword>
+          <keyword>EditorScenePostImport</keyword>
+          <keyword>EditorScenePostImportPlugin</keyword>
+          <keyword>EditorScript</keyword>
+          <keyword>EditorSelection</keyword>
+          <keyword>EditorTranslationParserPlugin</keyword>
+          <keyword>EditorUndoRedoManager</keyword>
+          <keyword>EditorVCSInterface</keyword>
+          <keyword>EncodedObjectAsID</keyword>
+          <keyword>ENetConnection</keyword>
+          <keyword>ENetMultiplayerPeer</keyword>
+          <keyword>ENetPacketPeer</keyword>
+          <keyword>Engine</keyword>
+          <keyword>EngineDebugger</keyword>
+          <keyword>EngineProfiler</keyword>
+          <keyword>Expression</keyword>
+          <keyword>FileAccess</keyword>
+          <keyword>FramebufferCacheRD</keyword>
+          <keyword>GDExtensionManager</keyword>
+          <keyword>Geometry2D</keyword>
+          <keyword>Geometry3D</keyword>
+          <keyword>GLTFObjectModelProperty</keyword>
+          <keyword>HashingContext</keyword>
+          <keyword>HMACContext</keyword>
+          <keyword>HTTPClient</keyword>
+          <keyword>ImageFormatLoader</keyword>
+          <keyword>ImageFormatLoaderExtension</keyword>
+          <keyword>Input</keyword>
+          <keyword>InputMap</keyword>
+          <keyword>IntervalTweener</keyword>
+          <keyword>IP</keyword>
+          <keyword>JavaClass</keyword>
+          <keyword>JavaClassWrapper</keyword>
+          <keyword>JavaObject</keyword>
+          <keyword>JavaScriptBridge</keyword>
+          <keyword>JavaScriptObject</keyword>
+          <keyword>JNISingleton</keyword>
+          <keyword>JSONRPC</keyword>
+          <keyword>KinematicCollision2D</keyword>
+          <keyword>KinematicCollision3D</keyword>
+          <keyword>Lightmapper</keyword>
+          <keyword>LightmapperRD</keyword>
+          <keyword>Logger</keyword>
+          <keyword>MainLoop</keyword>
+          <keyword>Marshalls</keyword>
+          <keyword>MeshConvexDecompositionSettings</keyword>
+          <keyword>MeshDataTool</keyword>
+          <keyword>MethodTweener</keyword>
+          <keyword>MobileVRInterface</keyword>
+          <keyword>MovieWriter</keyword>
+          <keyword>MultiplayerAPI</keyword>
+          <keyword>MultiplayerAPIExtension</keyword>
+          <keyword>MultiplayerPeer</keyword>
+          <keyword>MultiplayerPeerExtension</keyword>
+          <keyword>Mutex</keyword>
+          <keyword>NativeMenu</keyword>
+          <keyword>NavigationMeshGenerator</keyword>
+          <keyword>NavigationPathQueryParameters2D</keyword>
+          <keyword>NavigationPathQueryParameters3D</keyword>
+          <keyword>NavigationPathQueryResult2D</keyword>
+          <keyword>NavigationPathQueryResult3D</keyword>
+          <keyword>NavigationServer2D</keyword>
+          <keyword>NavigationServer3D</keyword>
+          <keyword>Node</keyword>
+          <keyword>Node3DGizmo</keyword>
+          <keyword>OfflineMultiplayerPeer</keyword>
+          <keyword>OggPacketSequencePlayback</keyword>
+          <keyword>OpenXRAPIExtension</keyword>
+          <keyword>OpenXRExtensionWrapper</keyword>
+          <keyword>OpenXRExtensionWrapperExtension</keyword>
+          <keyword>OpenXRFutureExtension</keyword>
+          <keyword>OpenXRFutureResult</keyword>
+          <keyword>OpenXRInteractionProfileMetadata</keyword>
+          <keyword>OpenXRInterface</keyword>
+          <keyword>OpenXRRenderModelExtension</keyword>
+          <keyword>OS</keyword>
+          <keyword>PackedDataContainerRef</keyword>
+          <keyword>PacketPeer</keyword>
+          <keyword>PacketPeerDTLS</keyword>
+          <keyword>PacketPeerExtension</keyword>
+          <keyword>PacketPeerStream</keyword>
+          <keyword>PacketPeerUDP</keyword>
+          <keyword>PCKPacker</keyword>
+          <keyword>Performance</keyword>
+          <keyword>PhysicsDirectBodyState2D</keyword>
+          <keyword>PhysicsDirectBodyState2DExtension</keyword>
+          <keyword>PhysicsDirectBodyState3D</keyword>
+          <keyword>PhysicsDirectBodyState3DExtension</keyword>
+          <keyword>PhysicsDirectSpaceState2D</keyword>
+          <keyword>PhysicsDirectSpaceState2DExtension</keyword>
+          <keyword>PhysicsDirectSpaceState3D</keyword>
+          <keyword>PhysicsDirectSpaceState3DExtension</keyword>
+          <keyword>PhysicsPointQueryParameters2D</keyword>
+          <keyword>PhysicsPointQueryParameters3D</keyword>
+          <keyword>PhysicsRayQueryParameters2D</keyword>
+          <keyword>PhysicsRayQueryParameters3D</keyword>
+          <keyword>PhysicsServer2D</keyword>
+          <keyword>PhysicsServer2DExtension</keyword>
+          <keyword>PhysicsServer2DManager</keyword>
+          <keyword>PhysicsServer3D</keyword>
+          <keyword>PhysicsServer3DExtension</keyword>
+          <keyword>PhysicsServer3DManager</keyword>
+          <keyword>PhysicsServer3DRenderingServerHandler</keyword>
+          <keyword>PhysicsShapeQueryParameters2D</keyword>
+          <keyword>PhysicsShapeQueryParameters3D</keyword>
+          <keyword>PhysicsTestMotionParameters2D</keyword>
+          <keyword>PhysicsTestMotionParameters3D</keyword>
+          <keyword>PhysicsTestMotionResult2D</keyword>
+          <keyword>PhysicsTestMotionResult3D</keyword>
+          <keyword>ProjectSettings</keyword>
+          <keyword>PropertyTweener</keyword>
+          <keyword>RandomNumberGenerator</keyword>
+          <keyword>RDAttachmentFormat</keyword>
+          <keyword>RDFramebufferPass</keyword>
+          <keyword>RDPipelineColorBlendState</keyword>
+          <keyword>RDPipelineColorBlendStateAttachment</keyword>
+          <keyword>RDPipelineDepthStencilState</keyword>
+          <keyword>RDPipelineMultisampleState</keyword>
+          <keyword>RDPipelineRasterizationState</keyword>
+          <keyword>RDPipelineSpecializationConstant</keyword>
+          <keyword>RDSamplerState</keyword>
+          <keyword>RDShaderSource</keyword>
+          <keyword>RDTextureFormat</keyword>
+          <keyword>RDTextureView</keyword>
+          <keyword>RDUniform</keyword>
+          <keyword>RDVertexAttribute</keyword>
+          <keyword>RefCounted</keyword>
+          <keyword>RegEx</keyword>
+          <keyword>RegExMatch</keyword>
+          <keyword>RenderData</keyword>
+          <keyword>RenderDataExtension</keyword>
+          <keyword>RenderDataRD</keyword>
+          <keyword>RenderingDevice</keyword>
+          <keyword>RenderingServer</keyword>
+          <keyword>RenderSceneBuffers</keyword>
+          <keyword>RenderSceneBuffersConfiguration</keyword>
+          <keyword>RenderSceneBuffersExtension</keyword>
+          <keyword>RenderSceneBuffersRD</keyword>
+          <keyword>RenderSceneData</keyword>
+          <keyword>RenderSceneDataExtension</keyword>
+          <keyword>RenderSceneDataRD</keyword>
+          <keyword>Resource</keyword>
+          <keyword>ResourceFormatLoader</keyword>
+          <keyword>ResourceFormatSaver</keyword>
+          <keyword>ResourceImporter</keyword>
+          <keyword>ResourceImporterBitMap</keyword>
+          <keyword>ResourceImporterBMFont</keyword>
+          <keyword>ResourceImporterCSVTranslation</keyword>
+          <keyword>ResourceImporterDynamicFont</keyword>
+          <keyword>ResourceImporterImage</keyword>
+          <keyword>ResourceImporterImageFont</keyword>
+          <keyword>ResourceImporterLayeredTexture</keyword>
+          <keyword>ResourceImporterMP3</keyword>
+          <keyword>ResourceImporterOBJ</keyword>
+          <keyword>ResourceImporterOggVorbis</keyword>
+          <keyword>ResourceImporterScene</keyword>
+          <keyword>ResourceImporterShaderFile</keyword>
+          <keyword>ResourceImporterSVG</keyword>
+          <keyword>ResourceImporterTexture</keyword>
+          <keyword>ResourceImporterTextureAtlas</keyword>
+          <keyword>ResourceImporterWAV</keyword>
+          <keyword>ResourceLoader</keyword>
+          <keyword>ResourceSaver</keyword>
+          <keyword>ResourceUID</keyword>
+          <keyword>SceneMultiplayer</keyword>
+          <keyword>SceneState</keyword>
+          <keyword>SceneTree</keyword>
+          <keyword>SceneTreeTimer</keyword>
+          <keyword>ScriptBacktrace</keyword>
+          <keyword>ScriptLanguage</keyword>
+          <keyword>ScriptLanguageExtension</keyword>
+          <keyword>Semaphore</keyword>
+          <keyword>ShaderIncludeDB</keyword>
+          <keyword>SkinReference</keyword>
+          <keyword>StreamPeer</keyword>
+          <keyword>StreamPeerBuffer</keyword>
+          <keyword>StreamPeerExtension</keyword>
+          <keyword>StreamPeerGZIP</keyword>
+          <keyword>StreamPeerTCP</keyword>
+          <keyword>StreamPeerTLS</keyword>
+          <keyword>SubtweenTweener</keyword>
+          <keyword>SurfaceTool</keyword>
+          <keyword>TCPServer</keyword>
+          <keyword>TextLine</keyword>
+          <keyword>TextParagraph</keyword>
+          <keyword>TextServer</keyword>
+          <keyword>TextServerAdvanced</keyword>
+          <keyword>TextServerDummy</keyword>
+          <keyword>TextServerExtension</keyword>
+          <keyword>TextServerFallback</keyword>
+          <keyword>TextServerManager</keyword>
+          <keyword>ThemeDB</keyword>
+          <keyword>Thread</keyword>
+          <keyword>TileData</keyword>
+          <keyword>Time</keyword>
+          <keyword>TLSOptions</keyword>
+          <keyword>TranslationDomain</keyword>
+          <keyword>TranslationServer</keyword>
+          <keyword>TreeItem</keyword>
+          <keyword>TriangleMesh</keyword>
+          <keyword>Tween</keyword>
+          <keyword>Tweener</keyword>
+          <keyword>UDPServer</keyword>
+          <keyword>UndoRedo</keyword>
+          <keyword>UniformSetCacheRD</keyword>
+          <keyword>UPNP</keyword>
+          <keyword>UPNPDevice</keyword>
+          <keyword>WeakRef</keyword>
+          <keyword>WebRTCDataChannel</keyword>
+          <keyword>WebRTCDataChannelExtension</keyword>
+          <keyword>WebRTCMultiplayerPeer</keyword>
+          <keyword>WebRTCPeerConnection</keyword>
+          <keyword>WebRTCPeerConnectionExtension</keyword>
+          <keyword>WebSocketMultiplayerPeer</keyword>
+          <keyword>WebSocketPeer</keyword>
+          <keyword>WebXRInterface</keyword>
+          <keyword>WorkerThreadPool</keyword>
+          <keyword>XMLParser</keyword>
+          <keyword>XRBodyTracker</keyword>
+          <keyword>XRControllerTracker</keyword>
+          <keyword>XRFaceTracker</keyword>
+          <keyword>XRHandTracker</keyword>
+          <keyword>XRInterface</keyword>
+          <keyword>XRInterfaceExtension</keyword>
+          <keyword>XRPose</keyword>
+          <keyword>XRPositionalTracker</keyword>
+          <keyword>XRServer</keyword>
+          <keyword>XRTracker</keyword>
+          <keyword>XRVRS</keyword>
+          <keyword>ZIPPacker</keyword>
+          <keyword>ZIPReader</keyword>
+          <keyword>EditorCommandPalette</keyword>
+          <keyword>EditorContextMenuPlugin</keyword>
+          <keyword>EditorDebuggerPlugin</keyword>
+          <keyword>EditorDebuggerSession</keyword>
+          <keyword>EditorExportPlatform</keyword>
+          <keyword>EditorExportPlatformAndroid</keyword>
+          <keyword>EditorExportPlatformAppleEmbedded</keyword>
+          <keyword>EditorExportPlatformExtension</keyword>
+          <keyword>EditorExportPlatformIOS</keyword>
+          <keyword>EditorExportPlatformLinuxBSD</keyword>
+          <keyword>EditorExportPlatformMacOS</keyword>
+          <keyword>EditorExportPlatformPC</keyword>
+          <keyword>EditorExportPlatformVisionOS</keyword>
+          <keyword>EditorExportPlatformWeb</keyword>
+          <keyword>EditorExportPlatformWindows</keyword>
+          <keyword>EditorExportPlugin</keyword>
+          <keyword>EditorExportPreset</keyword>
+          <keyword>EditorFeatureProfile</keyword>
+          <keyword>EditorFileDialog</keyword>
+          <keyword>EditorFileSystem</keyword>
+          <keyword>EditorFileSystemDirectory</keyword>
+          <keyword>EditorFileSystemImportFormatSupportQuery</keyword>
+          <keyword>EditorImportPlugin</keyword>
+          <keyword>EditorInspector</keyword>
+          <keyword>EditorInspectorPlugin</keyword>
+          <keyword>EditorInterface</keyword>
+          <keyword>EditorNode3DGizmo</keyword>
+          <keyword>EditorNode3DGizmoPlugin</keyword>
+          <keyword>EditorPaths</keyword>
+          <keyword>EditorPlugin</keyword>
+          <keyword>EditorProperty</keyword>
+          <keyword>EditorResourceConversionPlugin</keyword>
+          <keyword>EditorResourcePicker</keyword>
+          <keyword>EditorResourcePreview</keyword>
+          <keyword>EditorResourcePreviewGenerator</keyword>
+          <keyword>EditorResourceTooltipPlugin</keyword>
+          <keyword>EditorSceneFormatImporter</keyword>
+          <keyword>EditorSceneFormatImporterBlend</keyword>
+          <keyword>EditorSceneFormatImporterFBX2GLTF</keyword>
+          <keyword>EditorSceneFormatImporterGLTF</keyword>
+          <keyword>EditorSceneFormatImporterUFBX</keyword>
+          <keyword>EditorScenePostImport</keyword>
+          <keyword>EditorScenePostImportPlugin</keyword>
+          <keyword>EditorScript</keyword>
+          <keyword>EditorScriptPicker</keyword>
+          <keyword>EditorSelection</keyword>
+          <keyword>EditorSettings</keyword>
+          <keyword>EditorSpinSlider</keyword>
+          <keyword>EditorSyntaxHighlighter</keyword>
+          <keyword>EditorToaster</keyword>
+          <keyword>EditorTranslationParserPlugin</keyword>
+          <keyword>EditorUndoRedoManager</keyword>
+          <keyword>EditorVCSInterface</keyword>
+          <keyword>FileSystemDock</keyword>
+          <keyword>ScriptCreateDialog</keyword>
+          <keyword>ScriptEditor</keyword>
+          <keyword>ScriptEditorBase</keyword>
+          <keyword>Variant</keyword>
+          <keyword>AABB</keyword>
+          <keyword>Array</keyword>
+          <keyword>Basis</keyword>
+          <keyword>bool</keyword>
+          <keyword>Callable</keyword>
+          <keyword>Color</keyword>
+          <keyword>Dictionary</keyword>
+          <keyword>float</keyword>
+          <keyword>int</keyword>
+          <keyword>NodePath</keyword>
+          <keyword>Object</keyword>
+          <keyword>PackedByteArray</keyword>
+          <keyword>PackedColorArray</keyword>
+          <keyword>PackedFloat32Array</keyword>
+          <keyword>PackedFloat64Array</keyword>
+          <keyword>PackedInt32Array</keyword>
+          <keyword>PackedInt64Array</keyword>
+          <keyword>PackedStringArray</keyword>
+          <keyword>PackedVector2Array</keyword>
+          <keyword>PackedVector3Array</keyword>
+          <keyword>PackedVector4Array</keyword>
+          <keyword>Plane</keyword>
+          <keyword>Projection</keyword>
+          <keyword>Quaternion</keyword>
+          <keyword>Rect2</keyword>
+          <keyword>Rect2i</keyword>
+          <keyword>RID</keyword>
+          <keyword>Signal</keyword>
+          <keyword>String</keyword>
+          <keyword>StringName</keyword>
+          <keyword>Transform2D</keyword>
+          <keyword>Transform3D</keyword>
+          <keyword>Vector2</keyword>
+          <keyword>Vector2i</keyword>
+          <keyword>Vector3</keyword>
+          <keyword>Vector3i</keyword>
+          <keyword>Vector4</keyword>
+          <keyword>Vector4i</keyword>
+        </context>
+
+        <context id="builtin-function" style-ref="builtin-function">
+          <prefix>(?&lt;![\w\.])</prefix>
+          <keyword>null</keyword>
+          <keyword>print</keyword>
+          <keyword>sin</keyword>
+          <keyword>cos</keyword>
+          <keyword>tan</keyword>
+          <keyword>sinh</keyword>
+          <keyword>cosh</keyword>
+          <keyword>tanh</keyword>
+          <keyword>asin</keyword>
+          <keyword>acos</keyword>
+          <keyword>atan</keyword>
+          <keyword>atan2</keyword>
+          <keyword>sqrt</keyword>
+          <keyword>fmod</keyword>
+          <keyword>fposmod</keyword>
+          <keyword>floor</keyword>
+          <keyword>ceil</keyword>
+          <keyword>round</keyword>
+          <keyword>abs</keyword>
+          <keyword>sign</keyword>
+          <keyword>pow</keyword>
+          <keyword>log</keyword>
+          <keyword>exp</keyword>
+          <keyword>isnan</keyword>
+          <keyword>isinf</keyword>
+          <keyword>ease</keyword>
+          <keyword>decimals</keyword>
+          <keyword>stepify</keyword>
+          <keyword>lerp</keyword>
+          <keyword>dectime</keyword>
+          <keyword>randomize</keyword>
+          <keyword>rand</keyword>
+          <keyword>randi</keyword>
+          <keyword>randf</keyword>
+          <keyword>rand_range</keyword>
+          <keyword>rand_seed</keyword>
+          <keyword>deg2rad</keyword>
+          <keyword>rad2deg</keyword>
+          <keyword>linear2db</keyword>
+          <keyword>db2linear</keyword>
+          <keyword>max</keyword>
+          <keyword>min</keyword>
+          <keyword>clamp</keyword>
+          <keyword>nearest_po2</keyword>
+          <keyword>weakref</keyword>
+          <keyword>convert</keyword>
+          <keyword>str</keyword>
+          <keyword>print</keyword>
+          <keyword>printt</keyword>
+          <keyword>printerr</keyword>
+          <keyword>printraw</keyword>
+          <keyword>range</keyword>
+          <keyword>load</keyword>
+          <keyword>inst2dict</keyword>
+          <keyword>dict2inst</keyword>
+        </context>
+    
+    <context id="double-quoted-string" style-ref="string" end-at-line-end="true" class="string" class-disabled="no-spell-check">
+      <start>"</start>
+      <end>"</end>
+      <include>
+        <context ref="format"/>
+        <context ref="escaped-char"/>
+        <context ref="def:line-continue"/>
+      </include>
+    </context>
+
+    <context id="single-quoted-string" style-ref="string" end-at-line-end="true" class="string" class-disabled="no-spell-check">
+      <start>'</start>
+      <end>'</end>
+      <include>
+        <context ref="format"/>
+        <context ref="escaped-char"/>
+        <context ref="def:line-continue"/>
+      </include>
+    </context>
+
+      </include>
+    </context>
+  </definitions>
+</language>
